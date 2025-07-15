@@ -48,47 +48,90 @@ async function migrateFacultyData() {
     
     console.log(`✅ Parsed ${csvRecords.length} records from CSV\n`);
     
-    // Transform records
-    const records = csvRecords
+    // Transform records and handle duplicates
+    const emailMap = new Map();
+    csvRecords
       .filter(row => row.FirstName && row.LastName && row.Email)
-      .map(row => ({
-        first_name: row.FirstName,
-        last_name: row.LastName,
-        email: row.Email.toLowerCase(),
-        job_title: row.Job_Title || null,
-        academic_rank: row.Academic_Rank || null,
-        school: row.AcadUnitSchool || null,
-        department: row.Account_Name || null,
-        track_type: row.Track_type || null,
-        track_type_category: row.Track_type_category || null,
-        tenure_status: row.Academic_Tenure_status || null,
-        hire_date: parseDate(row.Hiredate),
-        website: row.Website || null,
-        net_id: row.NetId || null,
+      .forEach(row => {
+        const email = row.Email.toLowerCase();
         
-        // Research interest scores
-        air_pollution: parseScore(row['Air/Pollution, chemicals, waste']),
-        biodiversity_loss: parseScore(row['Biodiversity Loss']),
-        climate: parseScore(row['Climate']),
-        governance_conflict_migration: parseScore(row['Governance, Conflict, & Migration']),
-        energy: parseScore(row['Energy']),
-        food: parseScore(row['Food']),
-        health_wellbeing: parseScore(row['Health & Wellbeing']),
-        infrastructure: parseScore(row['Infrastructure']),
-        land: parseScore(row['Land']),
-        poverty_disparity_injustice: parseScore(row['Poverty, Disparity, and Injustice']),
-        urban_built_environment: parseScore(row['Urban Built Environment']),
-        water: parseScore(row['Water']),
-        activism: parseScore(row['Activism']),
-        arts_humanities: parseScore(row['Arts & Humanities']),
-        business_management: parseScore(row['Business & Management']),
-        communication_behavior_awareness: parseScore(row['Communication, Behavior, Awareness']),
-        design: parseScore(row['Design']),
-        faith_morality_ethics: parseScore(row['Faith, Morality, Ethics']),
-        international_relations: parseScore(row['International Relations']),
-        law_policy: parseScore(row['Law & Policy']),
-        tech_innovation_entrepreneurship: parseScore(row['Tech, Innovation, & Entrepreneurship'])
-      }));
+        // If we've seen this email before, merge the expertise scores (take the max)
+        if (emailMap.has(email)) {
+          const existing = emailMap.get(email);
+          existing.air_pollution = Math.max(existing.air_pollution, parseScore(row['Air/Pollution, chemicals, waste']));
+          existing.biodiversity_loss = Math.max(existing.biodiversity_loss, parseScore(row['Biodiversity Loss']));
+          existing.climate = Math.max(existing.climate, parseScore(row['Climate']));
+          existing.governance_conflict_migration = Math.max(existing.governance_conflict_migration, parseScore(row['Governance, Conflict, & Migration']));
+          existing.energy = Math.max(existing.energy, parseScore(row['Energy']));
+          existing.food = Math.max(existing.food, parseScore(row['Food']));
+          existing.health_wellbeing = Math.max(existing.health_wellbeing, parseScore(row['Health & Wellbeing']));
+          existing.infrastructure = Math.max(existing.infrastructure, parseScore(row['Infrastructure']));
+          existing.land = Math.max(existing.land, parseScore(row['Land']));
+          existing.poverty_disparity_injustice = Math.max(existing.poverty_disparity_injustice, parseScore(row['Poverty, Disparity, and Injustice']));
+          existing.urban_built_environment = Math.max(existing.urban_built_environment, parseScore(row['Urban Built Environment']));
+          existing.water = Math.max(existing.water, parseScore(row['Water']));
+          existing.activism = Math.max(existing.activism, parseScore(row['Activism']));
+          existing.arts_humanities = Math.max(existing.arts_humanities, parseScore(row['Arts & Humanities']));
+          existing.business_management = Math.max(existing.business_management, parseScore(row['Business & Management']));
+          existing.communication_behavior_awareness = Math.max(existing.communication_behavior_awareness, parseScore(row['Communication, Behavior, Awareness']));
+          existing.design = Math.max(existing.design, parseScore(row['Design']));
+          existing.faith_morality_ethics = Math.max(existing.faith_morality_ethics, parseScore(row['Faith, Morality, Ethics']));
+          existing.international_relations = Math.max(existing.international_relations, parseScore(row['International Relations']));
+          existing.law_policy = Math.max(existing.law_policy, parseScore(row['Law & Policy']));
+          existing.tech_innovation_entrepreneurship = Math.max(existing.tech_innovation_entrepreneurship, parseScore(row['Tech, Innovation, & Entrepreneurship']));
+          
+          // Update other fields if they're better/more complete
+          if (!existing.website && row.Website) existing.website = row.Website;
+          if (!existing.academic_rank && row.Academic_Rank) existing.academic_rank = row.Academic_Rank;
+          if (!existing.school && row.AcadUnitSchool) existing.school = row.AcadUnitSchool;
+          if (!existing.department && row.Account_Name) existing.department = row.Account_Name;
+          if (!existing.job_title && row.Job_Title) existing.job_title = row.Job_Title;
+          
+        } else {
+          // New record
+          emailMap.set(email, {
+            first_name: row.FirstName,
+            last_name: row.LastName,
+            email: email,
+            job_title: row.Job_Title || null,
+            academic_rank: row.Academic_Rank || null,
+            school: row.AcadUnitSchool || null,
+            department: row.Account_Name || null,
+            track_type: row.Track_type || null,
+            track_type_category: row.Track_type_category || null,
+            tenure_status: row.Academic_Tenure_status || null,
+            hire_date: parseDate(row.Hiredate),
+            website: row.Website || null,
+            net_id: row.NetId || null,
+            
+            // Research interest scores
+            air_pollution: parseScore(row['Air/Pollution, chemicals, waste']),
+            biodiversity_loss: parseScore(row['Biodiversity Loss']),
+            climate: parseScore(row['Climate']),
+            governance_conflict_migration: parseScore(row['Governance, Conflict, & Migration']),
+            energy: parseScore(row['Energy']),
+            food: parseScore(row['Food']),
+            health_wellbeing: parseScore(row['Health & Wellbeing']),
+            infrastructure: parseScore(row['Infrastructure']),
+            land: parseScore(row['Land']),
+            poverty_disparity_injustice: parseScore(row['Poverty, Disparity, and Injustice']),
+            urban_built_environment: parseScore(row['Urban Built Environment']),
+            water: parseScore(row['Water']),
+            activism: parseScore(row['Activism']),
+            arts_humanities: parseScore(row['Arts & Humanities']),
+            business_management: parseScore(row['Business & Management']),
+            communication_behavior_awareness: parseScore(row['Communication, Behavior, Awareness']),
+            design: parseScore(row['Design']),
+            faith_morality_ethics: parseScore(row['Faith, Morality, Ethics']),
+            international_relations: parseScore(row['International Relations']),
+            law_policy: parseScore(row['Law & Policy']),
+            tech_innovation_entrepreneurship: parseScore(row['Tech, Innovation, & Entrepreneurship'])
+          });
+        }
+      });
+    
+    // Convert map to array
+    const records = Array.from(emailMap.values());
     
     console.log(`📊 Prepared ${records.length} faculty records for migration`);
     
