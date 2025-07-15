@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { ResearchTopic } from '../types'
+import { useFacultyTopicCounts } from '../hooks/useFacultyTopicCounts'
 
 interface NetworkTopicSelectorProps {
   topics: ResearchTopic[]
@@ -30,6 +31,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null)
   const [dimensions, setDimensions] = useState({ width: 500, height: 400 })
+  const { getTopicCount, loading: countsLoading } = useFacultyTopicCounts()
 
   // Calculate topic relationships (simplified for now)
   const calculateTopicRelationships = (topics: ResearchTopic[]): NetworkLink[] => {
@@ -83,19 +85,32 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
   }
 
   useEffect(() => {
-    if (!svgRef.current || topics.length === 0) return
+    if (!svgRef.current || topics.length === 0 || countsLoading) return
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove() // Clear previous render
 
     const { width, height } = dimensions
     
+    // Add zoom behavior
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 3])
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform)
+      })
+    
+    svg.call(zoom)
+    
+    // Create main group for all graph elements
+    const g = svg.append('g')
+      .attr('class', 'graph-container')
+    
     // Create nodes from topics (inline to fix dependency issue)
     const nodes: NetworkNode[] = topics.map(topic => ({
       id: topic.topic_key,
       topic,
       selected: selectedTopics.includes(topic.topic_key),
-      facultyCount: Math.floor(Math.random() * 50) + 1 // TODO: Replace with actual faculty count
+      facultyCount: getTopicCount(topic.topic_key)
     }))
     
     const links = calculateTopicRelationships(topics)
@@ -112,7 +127,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       .force('collision', d3.forceCollide().radius((d: any) => getNodeSize(d as NetworkNode) + 2))
 
     // Create links
-    const link = svg.append('g')
+    const link = g.append('g')
       .attr('class', 'links')
       .selectAll('line')
       .data(links)
@@ -122,7 +137,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       .attr('opacity', 0.6)
 
     // Create nodes
-    const node = svg.append('g')
+    const node = g.append('g')
       .attr('class', 'nodes')
       .selectAll('g')
       .data(nodes)
@@ -214,6 +229,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       if (!event.active) simulation.alphaTarget(0.3).restart()
       event.subject.fx = event.subject.x
       event.subject.fy = event.subject.y
+      event.sourceEvent.stopPropagation() // Prevent zoom when dragging nodes
     }
 
     function dragged(event: d3.D3DragEvent<SVGGElement, NetworkNode, NetworkNode>) {
@@ -227,11 +243,21 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       event.subject.fy = null
     }
 
+    // Add reset zoom functionality
+    const resetZoom = () => {
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform, d3.zoomIdentity)
+    }
+
+    // Store reset function for external access
+    ;(svg.node() as any).resetZoom = resetZoom
+
     // Cleanup
     return () => {
       simulation.stop()
     }
-  }, [topics, selectedTopics, dimensions, onTopicToggle, maxSelections])
+  }, [topics, selectedTopics, dimensions, onTopicToggle, maxSelections, countsLoading, getTopicCount])
 
   // Handle window resize
   useEffect(() => {
@@ -254,25 +280,49 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
 
   return (
     <div className="w-full h-full">
-      <div className="mb-4 text-center">
-        <h3 className="text-lg font-semibold text-slate-900">Research Network</h3>
-        <p className="text-sm text-slate-600 mt-1">
-          Click topics to select • Drag to explore • Hover to see connections
-        </p>
-        {selectedTopics.length > 0 && (
-          <p className="text-sm text-blue-600 mt-2">
-            {selectedTopics.length} of {maxSelections} topics selected
-          </p>
-        )}
+      <div className="mb-4">
+        <div className="flex items-center justify-between">
+          <div className="text-center flex-1">
+            <h3 className="text-lg font-semibold text-slate-900">Research Network</h3>
+            <p className="text-sm text-slate-600 mt-1">
+              Click topics to select • Drag to explore • Scroll to zoom • Hover to see connections
+            </p>
+            {selectedTopics.length > 0 && (
+              <p className="text-sm text-blue-600 mt-2">
+                {selectedTopics.length} of {maxSelections} topics selected
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              const svg = svgRef.current
+              if (svg && (svg as any).resetZoom) {
+                (svg as any).resetZoom()
+              }
+            }}
+            className="ml-4 px-3 py-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md transition-colors"
+          >
+            Reset Zoom
+          </button>
+        </div>
       </div>
       
       <div className="bg-white rounded-lg border border-slate-200 p-4" style={{ height: '400px' }}>
-        <svg
-          ref={svgRef}
-          width={dimensions.width}
-          height={dimensions.height}
-          style={{ width: '100%', height: '100%' }}
-        />
+        {countsLoading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <div className="text-slate-500 mt-4">Loading network data...</div>
+            </div>
+          </div>
+        ) : (
+          <svg
+            ref={svgRef}
+            width={dimensions.width}
+            height={dimensions.height}
+            style={{ width: '100%', height: '100%' }}
+          />
+        )}
       </div>
       
       <div className="mt-4 flex justify-center space-x-6 text-xs text-slate-500">
