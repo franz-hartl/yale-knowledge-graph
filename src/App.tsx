@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-import { NetworkTopicSelector } from './components/NetworkTopicSelector';
+import { TopicExpertiseLandscape } from './components/TopicExpertiseLandscape';
 import { FacultyResults } from './components/FacultyResults';
 import { FacultyProfile } from './components/FacultyProfile';
 import { useResearchTopics } from './hooks/useResearchTopics';
@@ -113,9 +113,9 @@ function App() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col gap-8">
-          {/* Top Panel - Network Visualization */}
+          {/* Top Panel - Topic Expertise Landscape */}
           <div className="w-full bg-white rounded-xl shadow-lg border border-slate-200 p-6">
-            <NetworkTopicSelector
+            <TopicExpertiseLandscape
               topics={topics}
               selectedTopics={selectedTopics}
               onTopicToggle={handleTopicToggle}
