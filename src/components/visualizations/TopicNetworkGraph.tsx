@@ -19,15 +19,24 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const [networkData, setNetworkData] = useState<NetworkData>({ nodes: [], edges: [] });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<NetworkNode | null>(null);
 
   const renderNetwork = useCallback(() => {
-    const svg = d3.select(svgRef.current);
-    svg.selectAll('*').remove(); // Clear previous render
+    try {
+      console.log('🎨 Rendering network with', networkData.nodes.length, 'nodes and', networkData.edges.length, 'edges');
+      
+      const svg = d3.select(svgRef.current);
+      if (!svg.node()) {
+        console.error('❌ SVG ref not available');
+        return;
+      }
+      
+      svg.selectAll('*').remove(); // Clear previous render
 
-    const width = 800;
-    const height = 600;
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      const width = 800;
+      const height = 600;
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
 
     svg.attr('width', width).attr('height', height);
 
@@ -119,24 +128,45 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
         d3.select(this)
           .transition()
           .duration(200)
-          .attr('r', sizeScale(d.size) + 5)
-          .attr('stroke-width', 3);
+          .attr('r', sizeScale(d.size) + 6)
+          .attr('stroke-width', 4)
+          .attr('stroke', '#1f2937');
 
         // Show tooltip
         const tooltip = d3.select('body').append('div')
-          .attr('class', 'tooltip')
+          .attr('class', 'network-tooltip')
           .style('position', 'absolute')
-          .style('background', 'rgba(0, 0, 0, 0.8)')
+          .style('background', 'rgba(0, 0, 0, 0.9)')
           .style('color', 'white')
-          .style('padding', '8px')
-          .style('border-radius', '4px')
-          .style('font-size', '12px')
+          .style('padding', '12px')
+          .style('border-radius', '6px')
+          .style('font-size', '14px')
+          .style('font-weight', 'bold')
           .style('pointer-events', 'none')
-          .style('opacity', 0);
+          .style('opacity', 0)
+          .style('box-shadow', '0 4px 8px rgba(0,0,0,0.2)')
+          .style('z-index', '9999');
 
         tooltip.transition().duration(200).style('opacity', 1);
-        tooltip.html(`<strong>${d.name}</strong><br/>${d.size} faculty`)
-          .style('left', (event.pageX + 10) + 'px')
+        
+        const topicData = d.data as any;
+        const tooltipContent = `
+          <div style="margin-bottom: 8px;">
+            <strong>${d.name}</strong>
+          </div>
+          <div style="margin-bottom: 4px;">
+            👥 ${d.size} faculty with expertise
+          </div>
+          <div style="font-size: 12px; color: #ccc;">
+            Category: ${topicData.category || 'Unknown'}
+          </div>
+          <div style="font-size: 11px; color: #999; margin-top: 8px;">
+            Click to explore faculty →
+          </div>
+        `;
+        
+        tooltip.html(tooltipContent)
+          .style('left', (event.pageX + 15) + 'px')
           .style('top', (event.pageY - 10) + 'px');
       })
       .on('mouseout', function(event, d) {
@@ -145,12 +175,14 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
           .transition()
           .duration(200)
           .attr('r', sizeScale(d.size))
-          .attr('stroke-width', 2);
+          .attr('stroke-width', 2)
+          .attr('stroke', '#fff');
 
         // Remove tooltip
-        d3.selectAll('.tooltip').remove();
+        d3.selectAll('.network-tooltip').remove();
       })
       .on('click', function(event, d) {
+        console.log('🎯 Topic clicked:', d.name, 'Faculty count:', d.size);
         setSelectedNode(d);
         if (onTopicSelect && d.type === 'topic') {
           onTopicSelect(d.id);
@@ -214,17 +246,43 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
       .text(d => d.label)
       .style('font-size', '12px')
       .style('fill', '#333');
+      
+      console.log('✅ Network rendering completed successfully');
+      
+    } catch (error) {
+      console.error('❌ Error rendering network:', error);
+      setError(`Rendering failed: ${error}`);
+    }
   }, [networkData, onTopicSelect, setSelectedNode]);
 
   useEffect(() => {
     if (faculty.length > 0 && topics.length > 0) {
-      console.log('Generating topic network with', faculty.length, 'faculty and', topics.length, 'topics');
-      const processor = new NetworkDataProcessor(faculty, topics);
-      processor.setExpertiseThreshold(1); // Lower threshold to show more connections
+      console.log('🔄 Generating topic network with', faculty.length, 'faculty and', topics.length, 'topics');
       
-      const data = processor.generateTopicNetwork();
-      console.log('Generated network data:', data);
-      setNetworkData(data);
+      try {
+        const processor = new NetworkDataProcessor(faculty, topics);
+        processor.setExpertiseThreshold(1); // Lower threshold to show more connections
+        
+        const data = processor.generateTopicNetwork();
+        console.log('✅ Generated network data:', {
+          nodeCount: data.nodes.length,
+          edgeCount: data.edges.length,
+          nodes: data.nodes.map(n => ({ id: n.id, name: n.name, size: n.size })),
+          edges: data.edges.map(e => ({ source: e.source, target: e.target, weight: e.weight }))
+        });
+        
+        if (data.nodes.length === 0) {
+          console.error('❌ No nodes generated - check topic data');
+          setError('No topics found to display');
+        } else {
+          setNetworkData(data);
+          setError(null);
+        }
+      } catch (error) {
+        console.error('❌ Error generating network data:', error);
+        setError(`Failed to generate network: ${error}`);
+      }
+      
       setLoading(false);
     }
   }, [faculty, topics]);
@@ -241,6 +299,23 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <div className="text-gray-500 mt-4">Processing network data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={`flex items-center justify-center h-96 ${className}`}>
+        <div className="text-center">
+          <div className="text-red-600 text-lg mb-2">Network Generation Error</div>
+          <div className="text-gray-500 text-sm mb-4">{error}</div>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
         </div>
       </div>
     );

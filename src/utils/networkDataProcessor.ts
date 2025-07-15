@@ -172,8 +172,16 @@ export class NetworkDataProcessor {
    * Generate Level 1 network data (Topic Network)
    */
   generateTopicNetwork(): NetworkData {
+    console.log('🔍 Starting topic network generation...');
+    console.log('📊 Available topics:', this.topics.length);
+    console.log('👥 Available faculty:', this.faculty.length);
+    console.log('🎯 Expertise threshold:', this.expertiseThreshold);
+    
     const topicConnections = this.calculateTopicConnections();
     const topicCounts = this.getTopicFacultyCounts();
+    
+    console.log('🔗 Topic connections calculated:', topicConnections.length);
+    console.log('📈 Topic counts:', Array.from(topicCounts.entries()));
     
     // Create topic nodes
     const nodes: NetworkNode[] = this.topics.map(topic => ({
@@ -194,6 +202,12 @@ export class NetworkDataProcessor {
         weight: connection.strength,
         type: 'topic-topic' as const
       }));
+
+    console.log('✅ Topic network generated:', { 
+      nodeCount: nodes.length, 
+      edgeCount: edges.length,
+      totalFacultyAcrossTopics: Array.from(topicCounts.values()).reduce((a, b) => a + b, 0)
+    });
 
     return { nodes, edges };
   }
