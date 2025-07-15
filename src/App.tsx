@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './App.css';
-import { TopicSelector } from './components/TopicSelector';
+import { NetworkTopicSelector } from './components/NetworkTopicSelector';
 import { FacultyResults } from './components/FacultyResults';
 import { FacultyProfile } from './components/FacultyProfile';
 import { useResearchTopics } from './hooks/useResearchTopics';
@@ -115,18 +115,7 @@ function App() {
         <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-200px)]">
           {/* Left Panel - Topic Selection */}
           <div className="w-full lg:w-2/5 bg-white rounded-xl shadow-lg border border-slate-200 p-6 overflow-y-auto">
-            <div className="sticky top-0 bg-white pb-6 mb-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Research Topics</h2>
-              <p className="text-slate-600 mt-2">
-                Select up to 3 topics to find relevant faculty
-              </p>
-              {selectedTopics.length > 0 && (
-                <p className="text-sm font-medium text-blue-600 mt-3">
-                  {selectedTopics.length} of 3 topics selected
-                </p>
-              )}
-            </div>
-            <TopicSelector
+            <NetworkTopicSelector
               topics={topics}
               selectedTopics={selectedTopics}
               onTopicToggle={handleTopicToggle}
