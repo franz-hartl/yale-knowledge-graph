@@ -127,6 +127,42 @@ Launches the test runner in interactive watch mode.
 ### `npm run build`
 Builds the app for production to the `build` folder.
 
+## Deployment
+
+### Vercel Deployment (Recommended)
+
+1. **Connect GitHub to Vercel:**
+   - Go to [vercel.com](https://vercel.com)
+   - Sign in with GitHub
+   - Click "New Project"
+   - Import your `yale-knowledge-graph` repository
+
+2. **Configure Environment Variables:**
+   - In Vercel dashboard, go to your project settings
+   - Add environment variables:
+     - `REACT_APP_SUPABASE_URL`: Your Supabase project URL
+     - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anon key
+
+3. **Deploy:**
+   - Click "Deploy"
+   - Your app will be available at `https://your-project.vercel.app`
+
+### Auto-Deployment Setup
+
+Vercel automatically deploys on every push to the main branch. No additional configuration needed!
+
+### Manual Deployment Commands
+
+```bash
+# Build and deploy to Vercel
+npm run build
+npx vercel --prod
+
+# Or install Vercel CLI globally
+npm install -g vercel
+vercel --prod
+```
+
 ## Contributing
 
 1. Fork the repository
