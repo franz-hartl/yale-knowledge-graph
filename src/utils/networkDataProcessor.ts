@@ -187,7 +187,7 @@ export class NetworkDataProcessor {
 
     // Create topic-topic edges
     const edges: NetworkEdge[] = topicConnections
-      .filter(connection => connection.sharedFaculty >= 2) // Only show significant connections
+      .filter(connection => connection.sharedFaculty >= 1) // Show all connections with at least 1 shared faculty
       .map(connection => ({
         source: connection.topic1,
         target: connection.topic2,

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Network Data</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .count { font-weight: bold; color: #007bff; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Yale Knowledge Graph - Network Debug</h1>
+    <div id="debug-info">Loading...</div>
+
+    <script>
+        // Test the network data generation
+        console.log('Testing network data generation...');
+        
+        // Simulate the data processing
+        const debugInfo = document.getElementById('debug-info');
+        
+        // Check if we can access the deployed app
+        fetch('/api/faculty')
+            .then(response => response.json())
+            .then(data => {
+                debugInfo.innerHTML = `
+                    <div class="debug-section">
+                        <h3>Faculty Data</h3>
+                        <p>Faculty count: <span class="count">${data.length}</span></p>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                debugInfo.innerHTML = `
+                    <div class="debug-section">
+                        <h3>Error</h3>
+                        <p class="error">Could not fetch faculty data: ${error.message}</p>
+                        <p>This is expected if running locally without backend API.</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>

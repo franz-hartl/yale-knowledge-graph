@@ -40,23 +40,29 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
     // Create scales
     const sizeScale = d3.scaleLinear()
       .domain(d3.extent(networkData.nodes, d => d.size) as [number, number])
-      .range([5, 30]);
+      .range([8, 40]);
 
     const linkScale = d3.scaleLinear()
-      .domain(d3.extent(networkData.edges, d => d.weight) as [number, number])
+      .domain(networkData.edges.length > 0 ? d3.extent(networkData.edges, d => d.weight) as [number, number] : [0, 1])
       .range([1, 5]);
 
     // Create force simulation
-    const simulation = d3.forceSimulation(networkData.nodes as any)
-      .force('link', d3.forceLink(networkData.edges)
+    const simulation = d3.forceSimulation(networkData.nodes as any);
+    
+    // Only add link force if there are edges
+    if (networkData.edges.length > 0) {
+      simulation.force('link', d3.forceLink(networkData.edges)
         .id((d: any) => d.id)
-        .distance(100)
-        .strength(0.5))
-      .force('charge', d3.forceManyBody().strength(-300))
+        .distance(120)
+        .strength(0.3));
+    }
+    
+    simulation
+      .force('charge', d3.forceManyBody().strength(-400))
       .force('center', d3.forceCenter(innerWidth / 2, innerHeight / 2))
-      .force('collision', d3.forceCollide().radius((d: any) => sizeScale(d.size) + 5));
+      .force('collision', d3.forceCollide().radius((d: any) => sizeScale(d.size) + 10));
 
-    // Create links
+    // Create links (only if there are edges)
     const link = g.append('g')
       .selectAll('line')
       .data(networkData.edges)
@@ -153,11 +159,14 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
 
     // Update positions on simulation tick
     simulation.on('tick', () => {
-      link
-        .attr('x1', (d: any) => d.source.x)
-        .attr('y1', (d: any) => d.source.y)
-        .attr('x2', (d: any) => d.target.x)
-        .attr('y2', (d: any) => d.target.y);
+      // Only update links if there are edges
+      if (networkData.edges.length > 0) {
+        link
+          .attr('x1', (d: any) => d.source.x)
+          .attr('y1', (d: any) => d.source.y)
+          .attr('x2', (d: any) => d.target.x)
+          .attr('y2', (d: any) => d.target.y);
+      }
 
       node
         .attr('cx', (d: any) => d.x)
@@ -209,10 +218,12 @@ export const TopicNetworkGraph: React.FC<TopicNetworkGraphProps> = ({
 
   useEffect(() => {
     if (faculty.length > 0 && topics.length > 0) {
+      console.log('Generating topic network with', faculty.length, 'faculty and', topics.length, 'topics');
       const processor = new NetworkDataProcessor(faculty, topics);
-      processor.setExpertiseThreshold(2); // Show connections for expertise level 2+
+      processor.setExpertiseThreshold(1); // Lower threshold to show more connections
       
       const data = processor.generateTopicNetwork();
+      console.log('Generated network data:', data);
       setNetworkData(data);
       setLoading(false);
     }
