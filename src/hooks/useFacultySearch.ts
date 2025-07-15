@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { Faculty, FacultyWithRelevance, TopicKey } from '../types'
+import { Faculty, FacultyWithRelevance } from '../types'
 
 export const useFacultySearch = (selectedTopics: string[]) => {
   const [results, setResults] = useState<FacultyWithRelevance[]>([])
@@ -24,7 +24,7 @@ export const useFacultySearch = (selectedTopics: string[]) => {
     return topics.length > 0 ? totalScore / topics.length : 0
   }
 
-  const searchFaculty = async (topics: string[]) => {
+  const searchFaculty = useCallback(async (topics: string[]) => {
     if (topics.length === 0) {
       setResults([])
       return
@@ -75,11 +75,11 @@ export const useFacultySearch = (selectedTopics: string[]) => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     searchFaculty(selectedTopics)
-  }, [selectedTopics])
+  }, [selectedTopics, searchFaculty])
 
   return { results, loading, error, searchFaculty }
 }
