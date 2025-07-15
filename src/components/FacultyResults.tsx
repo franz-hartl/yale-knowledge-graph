@@ -97,7 +97,7 @@ export const FacultyResults: React.FC<FacultyResultsProps> = ({
             Sorted by relevance
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            Bridge connectors highlighted
+            Interdisciplinary faculty highlighted
           </div>
         </div>
       </div>
@@ -123,17 +123,17 @@ export const FacultyResults: React.FC<FacultyResultsProps> = ({
             <div className="text-lg font-semibold">{results.length}</div>
           </div>
           <div>
-            <div className="text-gray-600">Bridge Connectors</div>
-            <div className="text-lg font-semibold text-purple-600">
-              {results.filter(f => f.is_bridge_connector).length}
+            <div className="text-gray-600">Interdisciplinary</div>
+            <div className="text-lg font-semibold text-green-600">
+              {results.filter(f => f.expertise_breadth && f.expertise_breadth >= 4).length}
             </div>
           </div>
           <div>
-            <div className="text-gray-600">Avg. Relevance</div>
+            <div className="text-gray-600">Avg. Match</div>
             <div className="text-lg font-semibold text-blue-600">
               {results.length > 0 
-                ? (results.reduce((sum, f) => sum + f.relevance_score, 0) / results.length).toFixed(1)
-                : '0.0'
+                ? Math.round((results.reduce((sum, f) => sum + f.relevance_score, 0) / results.length) * 20) + '%'
+                : '0%'
               }
             </div>
           </div>

@@ -82,21 +82,21 @@ export const FacultyProfile: React.FC<FacultyProfileProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="bg-blue-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-blue-600">
-                {faculty.relevance_score.toFixed(1)}
+                {Math.round(faculty.relevance_score * 20)}%
               </div>
-              <div className="text-sm text-blue-800">Relevance Score</div>
+              <div className="text-sm text-blue-800">Match Score</div>
             </div>
             <div className="bg-purple-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-purple-600">
-                {faculty.expertise_breadth}
+                {faculty.expertise_breadth || 0}
               </div>
-              <div className="text-sm text-purple-800">Research Topics</div>
+              <div className="text-sm text-purple-800">Research Areas</div>
             </div>
             <div className="bg-green-50 rounded-lg p-4 text-center">
               <div className="text-2xl font-bold text-green-600">
-                {faculty.is_bridge_connector ? 'Yes' : 'No'}
+                {faculty.expertise_breadth && faculty.expertise_breadth >= 4 ? 'Yes' : 'No'}
               </div>
-              <div className="text-sm text-green-800">Bridge Connector</div>
+              <div className="text-sm text-green-800">Interdisciplinary</div>
             </div>
           </div>
 

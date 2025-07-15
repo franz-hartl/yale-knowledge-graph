@@ -56,25 +56,76 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm">
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white shadow-sm border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Yale Knowledge Graph Explorer</h1>
-              <p className="mt-2 text-gray-600">Discover faculty expertise and potential collaborators</p>
+              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Yale Knowledge Graph Explorer</h1>
+              <p className="mt-2 text-slate-600 text-lg">Discover faculty expertise and potential collaborators</p>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500">Yale Planetary Solutions</p>
+              <p className="text-sm text-slate-500 font-medium">Yale Planetary Solutions</p>
             </div>
           </div>
         </div>
       </header>
 
+      {/* Search Summary Header */}
+      {selectedTopics.length > 0 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm font-semibold text-blue-900">
+                  Showing {results.length} faculty matching:
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {selectedTopics.map(topicKey => {
+                    const topic = topics.find(t => t.topic_key === topicKey);
+                    return (
+                      <span
+                        key={topicKey}
+                        className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white text-blue-900 shadow-sm border border-blue-200"
+                      >
+                        {topic?.display_name || topicKey}
+                        <button
+                          onClick={() => handleTopicToggle(topicKey)}
+                          className="ml-2 text-blue-600 hover:text-blue-800 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedTopics([])}
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+              >
+                Clear all
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
-          {/* Topic Selection */}
-          <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-200px)]">
+          {/* Left Panel - Topic Selection */}
+          <div className="w-full lg:w-2/5 bg-white rounded-xl shadow-lg border border-slate-200 p-6 overflow-y-auto">
+            <div className="sticky top-0 bg-white pb-6 mb-6 border-b border-slate-200">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight">Research Topics</h2>
+              <p className="text-slate-600 mt-2">
+                Select up to 3 topics to find relevant faculty
+              </p>
+              {selectedTopics.length > 0 && (
+                <p className="text-sm font-medium text-blue-600 mt-3">
+                  {selectedTopics.length} of 3 topics selected
+                </p>
+              )}
+            </div>
             <TopicSelector
               topics={topics}
               selectedTopics={selectedTopics}
@@ -83,8 +134,8 @@ function App() {
             />
           </div>
 
-          {/* Faculty Results */}
-          <div>
+          {/* Right Panel - Faculty Results */}
+          <div className="w-full lg:w-3/5 overflow-y-auto">
             <FacultyResults
               results={results}
               loading={searchLoading}

@@ -39,26 +39,12 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
 
   return (
     <div className="space-y-8">
-      <div className="text-center">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Select Research Topics
-        </h3>
-        <p className="text-sm text-gray-600">
-          Choose up to {maxSelections} topics to find relevant faculty
-        </p>
-        {selectedTopics.length > 0 && (
-          <p className="text-sm text-blue-600 mt-2">
-            {selectedTopics.length} of {maxSelections} topics selected
-          </p>
-        )}
-      </div>
-
       {Object.entries(groupedTopics).map(([category, categoryTopics]) => (
-        <div key={category} className="space-y-3">
-          <h4 className="font-medium text-gray-900 text-center">
+        <div key={category} className="space-y-4">
+          <h4 className="font-bold text-slate-900 text-sm uppercase tracking-wider">
             {getCategoryTitle(category)}
           </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="space-y-3">
             {categoryTopics.map((topic) => {
               const isSelected = selectedTopics.includes(topic.topic_key)
               const isDisabled = !isSelected && !canSelectMore
@@ -69,22 +55,22 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
                   onClick={() => onTopicToggle(topic.topic_key)}
                   disabled={isDisabled}
                   className={`
-                    relative p-3 rounded-lg border text-left transition-all
+                    w-full text-left p-4 rounded-lg border transition-all duration-200
                     ${isSelected
-                      ? 'border-blue-500 bg-blue-50 text-blue-900'
+                      ? 'border-blue-500 bg-blue-50 text-blue-900 shadow-md ring-1 ring-blue-500/20'
                       : isDisabled
-                      ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
-                      : 'border-gray-200 bg-white text-gray-900 hover:border-gray-300 hover:bg-gray-50 cursor-pointer'
+                      ? 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed'
+                      : 'border-slate-200 bg-white text-slate-900 hover:border-slate-300 hover:bg-slate-50 cursor-pointer hover:shadow-sm'
                     }
                   `}
                 >
                   <div className="flex items-start space-x-3">
                     <div
                       className={`
-                        w-4 h-4 rounded-full border-2 flex-shrink-0 mt-0.5
+                        w-5 h-5 rounded-full border-2 flex-shrink-0 mt-0.5 transition-all
                         ${isSelected
                           ? 'border-blue-500 bg-blue-500'
-                          : 'border-gray-300'
+                          : 'border-slate-300'
                         }
                       `}
                     >
@@ -93,11 +79,11 @@ export const TopicSelector: React.FC<TopicSelectorProps> = ({
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-tight">
+                      <p className="text-sm font-semibold leading-tight">
                         {topic.display_name}
                       </p>
                       {topic.description && (
-                        <p className="text-xs text-gray-500 mt-1 leading-tight">
+                        <p className="text-xs text-slate-500 mt-1 leading-tight">
                           {topic.description}
                         </p>
                       )}
