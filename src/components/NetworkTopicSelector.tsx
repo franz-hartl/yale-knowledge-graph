@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import * as d3 from 'd3'
 import { ResearchTopic } from '../types'
 import { useFacultyTopicCounts } from '../hooks/useFacultyTopicCounts'
+import { useTopicRelationships } from '../hooks/useTopicRelationships'
 
 interface NetworkTopicSelectorProps {
   topics: ResearchTopic[]
@@ -32,33 +33,8 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
   const svgRef = useRef<SVGSVGElement>(null)
   const [dimensions, setDimensions] = useState({ width: 500, height: 400 })
   const { getTopicCount, loading: countsLoading } = useFacultyTopicCounts()
+  const { relationships, loading: relationshipsLoading } = useTopicRelationships()
 
-  // Calculate topic relationships (simplified for now)
-  const calculateTopicRelationships = (topics: ResearchTopic[]): NetworkLink[] => {
-    const links: NetworkLink[] = []
-    
-    // Create links between topics in the same category
-    topics.forEach((topic, i) => {
-      topics.slice(i + 1).forEach(otherTopic => {
-        if (topic.category === otherTopic.category) {
-          links.push({
-            source: topic.topic_key,
-            target: otherTopic.topic_key,
-            strength: 0.8 // Strong connection for same category
-          })
-        } else {
-          // Weaker connections between different categories
-          links.push({
-            source: topic.topic_key,
-            target: otherTopic.topic_key,
-            strength: 0.2
-          })
-        }
-      })
-    })
-    
-    return links
-  }
 
 
   // Color function based on category
@@ -85,7 +61,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
   }
 
   useEffect(() => {
-    if (!svgRef.current || topics.length === 0 || countsLoading) return
+    if (!svgRef.current || topics.length === 0 || countsLoading || relationshipsLoading) return
 
     const svg = d3.select(svgRef.current)
     svg.selectAll('*').remove() // Clear previous render
@@ -113,28 +89,62 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       facultyCount: getTopicCount(topic.topic_key)
     }))
     
-    const links = calculateTopicRelationships(topics)
+    // Convert relationship data to network links
+    const links: NetworkLink[] = relationships.map(rel => ({
+      source: rel.source,
+      target: rel.target,
+      strength: rel.strength
+    }))
 
-    // Create force simulation
+    // Create force simulation with improved category clustering
     const simulation = d3.forceSimulation<NetworkNode>(nodes)
       .force('link', d3.forceLink<NetworkNode, NetworkLink>(links)
         .id(d => d.id)
-        .distance(60)
-        .strength(d => d.strength)
+        .distance(d => d.strength > 0.6 ? 50 : 100) // Adjust distances for cleaner layout
+        .strength(d => d.strength * 0.7) // Reduce link strength for gentler clustering
       )
-      .force('charge', d3.forceManyBody().strength(-100))
+      .force('charge', d3.forceManyBody().strength(-120)) // Increase repulsion for better separation
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius((d: any) => getNodeSize(d as NetworkNode) + 2))
+      .force('collision', d3.forceCollide().radius((d: any) => getNodeSize(d as NetworkNode) + 8))
+      
+      // Enhanced category clustering forces with better positioning
+      .force('categoryX', d3.forceX<NetworkNode>(d => {
+        switch (d.topic.category) {
+          case 'environmental': return width * 0.25  // Left side
+          case 'social': return width * 0.75        // Right side
+          case 'solutions': return width * 0.5      // Center
+          default: return width * 0.5
+        }
+      }).strength(0.3)) // Increased strength for better clustering
+      .force('categoryY', d3.forceY<NetworkNode>(d => {
+        switch (d.topic.category) {
+          case 'environmental': return height * 0.35 // Upper left
+          case 'social': return height * 0.35       // Upper right
+          case 'solutions': return height * 0.65    // Lower center
+          default: return height * 0.5
+        }
+      }).strength(0.25)) // Increased strength for better vertical separation
 
-    // Create links
+    // Create links with cleaner, more subtle styling
     const link = g.append('g')
       .attr('class', 'links')
       .selectAll('line')
       .data(links)
       .enter().append('line')
-      .attr('stroke', '#E5E7EB')
-      .attr('stroke-width', d => Math.sqrt(d.strength) * 2)
-      .attr('opacity', 0.6)
+      .attr('stroke', '#E5E7EB') // Lighter gray for subtlety
+      .attr('stroke-width', d => {
+        // Thinner lines based on strength
+        if (d.strength > 0.6) return 2
+        if (d.strength > 0.4) return 1.5
+        return 1
+      })
+      .attr('opacity', d => {
+        // More subtle opacity gradation
+        if (d.strength > 0.6) return 0.4
+        if (d.strength > 0.4) return 0.25
+        return 0.15
+      })
+      .attr('stroke-dasharray', d => d.strength < 0.4 ? '3,3' : 'none') // Dashed for weak connections
 
     // Create nodes
     const node = g.append('g')
@@ -198,18 +208,35 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       node.select('circle')
         .attr('opacity', n => n.id === d.id || connectedNodes.has(n.id) ? 1 : 0.3)
       
-      // Update link appearances
+      // Update link appearances with better contrast
       link.attr('opacity', l => {
         const sourceId = typeof l.source === 'string' ? l.source : l.source.id
         const targetId = typeof l.target === 'string' ? l.target : l.target.id
-        return sourceId === d.id || targetId === d.id ? 0.8 : 0.1
+        return sourceId === d.id || targetId === d.id ? 0.7 : 0.05
+      })
+      .attr('stroke-width', l => {
+        const sourceId = typeof l.source === 'string' ? l.source : l.source.id
+        const targetId = typeof l.target === 'string' ? l.target : l.target.id
+        const isConnected = sourceId === d.id || targetId === d.id
+        return isConnected ? 3 : 1
       })
     })
 
     node.on('mouseout', () => {
-      // Reset appearances
+      // Reset appearances to default styling
       node.select('circle').attr('opacity', 1)
-      link.attr('opacity', 0.6)
+      link.attr('opacity', d => {
+        // Restore original opacity based on strength
+        if (d.strength > 0.6) return 0.4
+        if (d.strength > 0.4) return 0.25
+        return 0.15
+      })
+      .attr('stroke-width', d => {
+        // Restore original stroke width
+        if (d.strength > 0.6) return 2
+        if (d.strength > 0.4) return 1.5
+        return 1
+      })
     })
 
     // Update simulation
@@ -257,7 +284,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
     return () => {
       simulation.stop()
     }
-  }, [topics, selectedTopics, dimensions, onTopicToggle, maxSelections, countsLoading, getTopicCount])
+  }, [topics, selectedTopics, dimensions, onTopicToggle, maxSelections, countsLoading, relationshipsLoading, getTopicCount, relationships])
 
   // Handle window resize
   useEffect(() => {
@@ -308,7 +335,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
       </div>
       
       <div className="bg-white rounded-lg border border-slate-200 p-4" style={{ height: '400px' }}>
-        {countsLoading ? (
+        {(countsLoading || relationshipsLoading) ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
