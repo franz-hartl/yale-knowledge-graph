@@ -67,7 +67,28 @@ CREATE TABLE IF NOT EXISTS faculty (
   ) STORED,
   
   is_bridge_connector BOOLEAN GENERATED ALWAYS AS (
-    expertise_breadth >= 4
+    (CASE WHEN air_pollution > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN biodiversity_loss > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN climate > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN governance_conflict_migration > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN energy > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN food > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN health_wellbeing > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN infrastructure > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN land > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN poverty_disparity_injustice > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN urban_built_environment > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN water > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN activism > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN arts_humanities > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN business_management > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN communication_behavior_awareness > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN design > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN faith_morality_ethics > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN international_relations > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN law_policy > 0 THEN 1 ELSE 0 END) +
+    (CASE WHEN tech_innovation_entrepreneurship > 0 THEN 1 ELSE 0 END)
+    >= 4
   ) STORED,
   
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
