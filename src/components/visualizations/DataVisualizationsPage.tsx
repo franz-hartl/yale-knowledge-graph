@@ -30,12 +30,13 @@ export const DataVisualizationsPage: React.FC<DataVisualizationsPageProps> = ({
     });
   };
 
-  const handleFacultySelect = (facultyEmail: string) => {
-    setViewState({
-      level: 'ego-network',
-      selectedFaculty: facultyEmail
-    });
-  };
+  // TODO: Implement faculty selection for Level 3 ego network
+  // const handleFacultySelect = (facultyEmail: string) => {
+  //   setViewState({
+  //     level: 'ego-network',
+  //     selectedFaculty: facultyEmail
+  //   });
+  // };
 
   const handleBackToTopics = () => {
     setViewState({
