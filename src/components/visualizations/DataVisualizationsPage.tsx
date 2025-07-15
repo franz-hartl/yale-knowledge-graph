@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { TopicNetworkGraph } from './TopicNetworkGraph';
+import { FacultyClusterGraph } from './FacultyClusterGraph';
+import { EgoNetworkGraph } from './EgoNetworkGraph';
 import { Faculty, ResearchTopic } from '../../types';
 
 interface DataVisualizationsPageProps {
@@ -30,13 +32,12 @@ export const DataVisualizationsPage: React.FC<DataVisualizationsPageProps> = ({
     });
   };
 
-  // TODO: Implement faculty selection for Level 3 ego network
-  // const handleFacultySelect = (facultyEmail: string) => {
-  //   setViewState({
-  //     level: 'ego-network',
-  //     selectedFaculty: facultyEmail
-  //   });
-  // };
+  const handleFacultySelect = (facultyEmail: string) => {
+    setViewState({
+      level: 'ego-network',
+      selectedFaculty: facultyEmail
+    });
+  };
 
   const handleBackToTopics = () => {
     setViewState({
@@ -130,50 +131,21 @@ export const DataVisualizationsPage: React.FC<DataVisualizationsPageProps> = ({
           />
         )}
 
-        {viewState.level === 'faculty-clusters' && (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Faculty Network: {getCurrentTopicName()}
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Faculty cluster visualization coming soon...
-            </p>
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <div className="mt-4">
-              <button
-                onClick={handleBackToTopics}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                Back to Topic Network
-              </button>
-            </div>
-          </div>
+        {viewState.level === 'faculty-clusters' && viewState.selectedTopic && (
+          <FacultyClusterGraph
+            faculty={faculty}
+            topics={topics}
+            selectedTopicKey={viewState.selectedTopic}
+            onFacultySelect={handleFacultySelect}
+          />
         )}
 
-        {viewState.level === 'ego-network' && (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Collaboration Network: {getCurrentFacultyName()}
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Individual faculty ego network coming soon...
-            </p>
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <div className="mt-4 space-x-3">
-              <button
-                onClick={handleBackToFaculty}
-                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-              >
-                Back to Faculty
-              </button>
-              <button
-                onClick={handleBackToTopics}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-              >
-                Back to Topics
-              </button>
-            </div>
-          </div>
+        {viewState.level === 'ego-network' && viewState.selectedFaculty && (
+          <EgoNetworkGraph
+            faculty={faculty}
+            topics={topics}
+            selectedFacultyEmail={viewState.selectedFaculty}
+          />
         )}
       </div>
 
