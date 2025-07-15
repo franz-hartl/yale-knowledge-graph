@@ -7,12 +7,15 @@ import * as csv from 'csv-parse'
 const supabaseUrl = 'https://gefrieuzuosbewltdbzq.supabase.co'
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || ''
 
+// If no service key, try using the anon key with a warning
+const supabaseKey = supabaseServiceKey || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZnJpZXV6dW9zYmV3bHRkYnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzI1MzcsImV4cCI6MjA2ODE0ODUzN30.ltvNOVqHrrPEPlFqUCGzs5IdjIWw_OqhTYAIC5XG4r0'
+
 if (!supabaseServiceKey) {
-  console.error('Missing SUPABASE_SERVICE_KEY environment variable')
-  process.exit(1)
+  console.warn('⚠️  Warning: Using anon key - migration may fail due to RLS policies')
+  console.warn('⚠️  To use service key: SUPABASE_SERVICE_KEY=your-service-key npm run migrate')
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 interface CSVRow {
   ID: string
@@ -136,14 +139,45 @@ async function migrateFacultyData() {
   
   console.log(`Parsed ${records.length} faculty records`)
   
+  // First, let's verify we can insert by checking RLS
+  console.log('\n🔐 Testing database permissions...')
+  const testRecord = {
+    email: 'test-migration@yale.edu',
+    first_name: 'Test',
+    last_name: 'Migration',
+    climate: 1
+  }
+  
+  const { error: testError } = await supabase
+    .from('faculty')
+    .upsert(testRecord, { onConflict: 'email' })
+  
+  if (testError) {
+    console.error('❌ Permission test failed:', testError.message)
+    if (testError.message.includes('row-level security')) {
+      console.error('\n⚠️  Row Level Security is blocking inserts!')
+      console.error('Please either:')
+      console.error('1. Use the service key: SUPABASE_SERVICE_KEY=your-service-key npm run migrate')
+      console.error('2. Or temporarily disable RLS in Supabase dashboard')
+      process.exit(1)
+    }
+  } else {
+    console.log('✅ Permission test passed!')
+    // Clean up test record
+    await supabase.from('faculty').delete().eq('email', 'test-migration@yale.edu')
+  }
+  
   // Insert records in batches
   const batchSize = 50
+  let successCount = 0
+  let errorCount = 0
+  
   for (let i = 0; i < records.length; i += batchSize) {
     const batch = records.slice(i, i + batchSize)
     
-    console.log(`Inserting batch ${Math.floor(i / batchSize) + 1}...`)
+    console.log(`\nInserting batch ${Math.floor(i / batchSize) + 1} of ${Math.ceil(records.length / batchSize)}...`)
     
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('faculty')
       .upsert(batch, { 
         onConflict: 'email',
@@ -151,12 +185,20 @@ async function migrateFacultyData() {
       })
     
     if (error) {
-      console.error('Error inserting batch:', error)
+      console.error('❌ Error inserting batch:', error.message)
+      errorCount += batch.length
       continue
     }
+    
+    successCount += batch.length
+    console.log(`✅ Batch inserted successfully`)
   }
   
-  console.log('Migration completed!')
+  console.log('\n📊 Migration Summary:')
+  console.log(`✅ Success: ${successCount} records`)
+  console.log(`❌ Errors: ${errorCount} records`)
+  
+  console.log('\n🔍 Verifying data...')
   
   // Get summary statistics
   const { count } = await supabase
@@ -164,6 +206,34 @@ async function migrateFacultyData() {
     .select('*', { count: 'exact', head: true })
   
   console.log(`Total faculty records in database: ${count}`)
+  
+  // Verify some actual data got inserted
+  const { data: climateData } = await supabase
+    .from('faculty')
+    .select('first_name, last_name, climate')
+    .gt('climate', 0)
+    .limit(5)
+  
+  const { data: healthData } = await supabase
+    .from('faculty')
+    .select('first_name, last_name, health_wellbeing')
+    .gt('health_wellbeing', 0)
+    .limit(5)
+  
+  console.log(`\n✅ Faculty with climate expertise: ${climateData?.length || 0}`)
+  if (climateData && climateData.length > 0) {
+    console.log('Sample:', climateData.slice(0, 2).map(f => `${f.first_name} ${f.last_name}`).join(', '))
+  }
+  
+  console.log(`\n✅ Faculty with health & wellbeing expertise: ${healthData?.length || 0}`)
+  if (healthData && healthData.length > 0) {
+    console.log('Sample:', healthData.slice(0, 2).map(f => `${f.first_name} ${f.last_name}`).join(', '))
+  }
+  
+  if (!climateData?.length && !healthData?.length) {
+    console.error('\n❌ Warning: No faculty with expertise scores > 0 found!')
+    console.error('Data may not have been inserted correctly.')
+  }
 }
 
 // Run the migration
