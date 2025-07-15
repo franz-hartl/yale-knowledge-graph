@@ -1,10 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || ''
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || ''
+const dbEndpoint = process.env.REACT_APP_DB_ENDPOINT || ''
+const apiToken = process.env.REACT_APP_API_TOKEN || ''
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+if (!dbEndpoint || !apiToken) {
+  throw new Error('Missing database configuration')
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+export const supabase = createClient(dbEndpoint, apiToken)

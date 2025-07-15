@@ -44,10 +44,10 @@ npm install
 cp .env.local.example .env.local
 ```
 
-Edit `.env.local` with your Supabase credentials:
+Edit `.env.local` with your database credentials:
 ```
-REACT_APP_SUPABASE_URL=your-supabase-url
-REACT_APP_SUPABASE_ANON_KEY=your-anon-key
+REACT_APP_DB_ENDPOINT=your-database-endpoint
+REACT_APP_API_TOKEN=your-api-token
 ```
 
 ### Database Setup
@@ -140,8 +140,8 @@ Builds the app for production to the `build` folder.
 2. **Configure Environment Variables:**
    - In Vercel dashboard, go to your project settings
    - Add environment variables:
-     - `REACT_APP_SUPABASE_URL`: Your Supabase project URL
-     - `REACT_APP_SUPABASE_ANON_KEY`: Your Supabase anon key
+     - `REACT_APP_DB_ENDPOINT`: Your database endpoint URL
+     - `REACT_APP_API_TOKEN`: Your API access token
 
 3. **Deploy:**
    - Click "Deploy"

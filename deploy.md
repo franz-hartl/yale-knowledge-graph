@@ -6,8 +6,8 @@
 
 Go to your Vercel dashboard and add these environment variables:
 
-1. **REACT_APP_SUPABASE_URL**: `https://gefrieuzuosbewltdbzq.supabase.co`
-2. **REACT_APP_SUPABASE_ANON_KEY**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZnJpZXV6dW9zYmV3bHRkYnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzI1MzcsImV4cCI6MjA2ODE0ODUzN30.ltvNOVqHrrPEPlFqUCGzs5IdjIWw_OqhTYAIC5XG4r0`
+1. **REACT_APP_DB_ENDPOINT**: `https://gefrieuzuosbewltdbzq.supabase.co`
+2. **REACT_APP_API_TOKEN**: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZnJpZXV6dW9zYmV3bHRkYnpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI1NzI1MzcsImV4cCI6MjA2ODE0ODUzN30.ltvNOVqHrrPEPlFqUCGzs5IdjIWw_OqhTYAIC5XG4r0`
 
 ### Step 2: Deploy
 
