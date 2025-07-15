@@ -22,7 +22,7 @@ export const TopicExpertiseLandscape: React.FC<TopicExpertiseLandscapeProps> = (
   maxSelections = 3
 }) => {
   const [searchTerm, setSearchTerm] = useState('')
-  const { getTopicCount, loading } = useFacultyTopicCounts()
+  const { getTopicCount, loading, error } = useFacultyTopicCounts()
 
   // Create topic stats
   const topicStats: TopicWithStats[] = topics.map(topic => ({
@@ -82,6 +82,17 @@ export const TopicExpertiseLandscape: React.FC<TopicExpertiseLandscapeProps> = (
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           <div className="text-slate-500 mt-4">Loading topic data...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 text-lg mb-2">Error loading topic data</div>
+          <div className="text-slate-500 text-sm">{error}</div>
         </div>
       </div>
     )

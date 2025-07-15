@@ -55,6 +55,7 @@ export const useFacultyTopicCounts = () => {
             return score > 0
           }).length || 0
 
+
           return {
             topic_key: topicKey,
             faculty_count: facultyCount
