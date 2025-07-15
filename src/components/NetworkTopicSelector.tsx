@@ -31,7 +31,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
   maxSelections = 3
 }) => {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 500, height: 400 })
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 })
   const { getTopicCount, loading: countsLoading } = useFacultyTopicCounts()
   const { relationships, loading: relationshipsLoading } = useTopicRelationships()
 
@@ -294,7 +294,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
         if (rect) {
           setDimensions({
             width: rect.width,
-            height: Math.min(rect.height, 500)
+            height: Math.min(rect.height, 600)
           })
         }
       }
@@ -334,7 +334,7 @@ export const NetworkTopicSelector: React.FC<NetworkTopicSelectorProps> = ({
         </div>
       </div>
       
-      <div className="bg-white rounded-lg border border-slate-200 p-4" style={{ height: '400px' }}>
+      <div className="bg-white rounded-lg border border-slate-200 p-4" style={{ height: '600px' }}>
         {(countsLoading || relationshipsLoading) ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

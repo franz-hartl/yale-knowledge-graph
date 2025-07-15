@@ -112,9 +112,9 @@ function App() {
       )}
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex flex-col lg:flex-row gap-8 min-h-[calc(100vh-200px)]">
-          {/* Left Panel - Topic Selection */}
-          <div className="w-full lg:w-2/5 bg-white rounded-xl shadow-lg border border-slate-200 p-6 overflow-y-auto">
+        <div className="flex flex-col gap-8">
+          {/* Top Panel - Network Visualization */}
+          <div className="w-full bg-white rounded-xl shadow-lg border border-slate-200 p-6">
             <NetworkTopicSelector
               topics={topics}
               selectedTopics={selectedTopics}
@@ -123,8 +123,8 @@ function App() {
             />
           </div>
 
-          {/* Right Panel - Faculty Results */}
-          <div className="w-full lg:w-3/5 overflow-y-auto">
+          {/* Bottom Panel - Faculty Results */}
+          <div className="w-full max-h-[600px] overflow-y-auto">
             <FacultyResults
               results={results}
               loading={searchLoading}
